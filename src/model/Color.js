@@ -2,7 +2,14 @@ export const Color = {
     ORANGE: "orange",
     GRAY: "gray",
     BLUE: "blue",
-    GREEN: "green"
+    GREEN: "green",
+    RED: "red",
+    PURPLE : "purple",
+    YELLOW: "yellow",
+    WHITE: null,
+    PINK:"pink",
+    LIGHT_BLUE:"#ADD8E6",
+    BROWN:"brown"
 };
 export class Direction {
     constructor(clockwise) {

@@ -18,14 +18,32 @@ export default class Board {
         this.size = config.size;
         this.selectedGroup = null;
         this.squares = this._loadConfiguration(config);
+        this.clearedGroups = new Set();
+        this.deselectedGroups = new Set();
         this.moveCount=0;
         this.selected = null;  // by default, no group is selected
     }
     selectGroup(row, col) {
+        if (this.selectedGroup && this.selectedGroup[0] === row && this.selectedGroup[1] === col) {
+            this.selectedGroup = null;
+            return false;  // Return false to indicate deselection
+        }
+        if (
+            this.squares[row][col].color === null &&
+            this.squares[row+1][col].color === null &&
+            this.squares[row][col+1].color === null &&
+            this.squares[row+1][col+1].color === null
+        ) {
+            // If all colors are white, do not select this group and maybe return a flag
+            return false;
+        }
+        
         if(row < this.size - 1 && col < this.size - 1) {
             this.selectedGroup = [row, col];
+            return true;
         } else {
             this.selectedGroup = null;
+            return false;
         }
     }
 
@@ -51,7 +69,33 @@ export default class Board {
         // Check if the group of squares are empty
         // Implementation depends on the exact structure and needs of your application
     }
-
+    checkAndClearMatchingGroups() {
+        const size = this.size;
+    
+        for (let i = 0; i < size - 1; i++) {
+            for (let j = 0; j < size - 1; j++) {
+                
+                if (
+                    this.squares[i][j].color === this.squares[i+1][j].color&&
+                    this.squares[i][j].color === this.squares[i][j+1].color &&
+                    this.squares[i][j].color === this.squares[i+1][j+1].color
+                ) {
+                    
+                    
+                    // If all colors are the same in this 2x2 group, clear them.
+                    this.squares[i][j].color = null; 
+                    this.squares[i+1][j].color = null;
+                    this.squares[i][j+1].color = null;
+                    this.squares[i+1][j+1].color = null;
+                    this.selectedGroup=null;
+                    
+                    
+                    
+                }
+                
+            }
+        }
+    }
     rotate(direction) {
         if (!this.selectedGroup) return;
     
@@ -76,6 +120,9 @@ export default class Board {
     
         this.squares = newSquares;  // update the squares with the new modified copy
         this.moveCount++;
+        
+        this.checkAndClearMatchingGroups();
+        // this.clearedGroups.clear();
     }
     
     
@@ -86,31 +133,37 @@ export default class Board {
     }
 
     isSolved() {
-        // Check if the board is solved
-        // Implementation depends on the exact structure and needs of your application
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                if (this.squares[i][j].color !== null) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
 
 // Sample configurations for 4x4, 5x5, and 6x6 boards
 const configurations = [
     new Configuration(4, [
-        [Color.ORANGE, Color.GRAY, Color.BLUE, Color.GREEN],
-        [Color.BLUE, Color.GREEN, Color.ORANGE, Color.GRAY],
-        [Color.GRAY, Color.ORANGE, Color.GREEN, Color.BLUE],
-        [Color.GREEN, Color.BLUE, Color.GRAY, Color.ORANGE]
+        [Color.GREEN, Color.ORANGE, Color.GRAY, Color.BLUE],
+        [Color.GREEN, Color.GRAY, Color.ORANGE, Color.BLUE],
+        [Color.GREEN, Color.ORANGE, Color.GRAY, Color.BLUE],
+        [Color.GREEN, Color.GRAY, Color.ORANGE, Color.BLUE]
     ]),
-    new Configuration(5,[ [Color.ORANGE, Color.GRAY, Color.BLUE, Color.GREEN,Color.ORANGE],
-        [Color.BLUE, Color.GREEN, Color.ORANGE, Color.GRAY,Color.BLUE],
-        [Color.GRAY, Color.ORANGE, Color.GREEN, Color.BLUE,Color.GRAY],
-        [Color.GREEN, Color.BLUE, Color.GRAY, Color.GREEN,Color.GREEN],
-        [Color.GRAY,Color.ORANGE,Color.GREEN,Color.BLUE,Color.GRAY]
+    new Configuration(5,[ [Color.ORANGE, Color.RED, Color.PURPLE, Color.GREEN,Color.BLUE],
+        [Color.RED, Color.ORANGE, Color.GREEN, Color.BLUE,Color.YELLOW],
+        [Color.PURPLE, Color.GREEN, Color.ORANGE, Color.YELLOW,Color.PURPLE],
+        [Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE,Color.RED],
+        [Color.BLUE,Color.YELLOW,Color.PURPLE,Color.RED,Color.WHITE]
         ]),
-        new Configuration(6,[ [Color.ORANGE, Color.GRAY, Color.BLUE, Color.GREEN,Color.ORANGE,Color.ORANGE],
-            [Color.BLUE, Color.GREEN, Color.ORANGE, Color.GRAY,Color.BLUE,Color.ORANGE],
-            [Color.GRAY, Color.ORANGE, Color.GREEN, Color.BLUE,Color.GRAY,Color.ORANGE],
-            [Color.GREEN, Color.BLUE, Color.GRAY, Color.GREEN,Color.GREEN,Color.ORANGE],
-            [Color.GRAY,Color.ORANGE,Color.GREEN,Color.BLUE,Color.GRAY,Color.ORANGE],
-            [Color.GRAY,Color.ORANGE,Color.GREEN,Color.BLUE,Color.GRAY,Color.ORANGE]
+        new Configuration(6,[ [Color.RED, Color.PINK, Color.PURPLE, Color.GREEN,Color.YELLOW,Color.RED],
+            [Color.YELLOW, Color.ORANGE, Color.BLUE, Color.BLUE,Color.ORANGE,Color.LIGHT_BLUE],
+            [Color.GREEN, Color.BROWN, Color.LIGHT_BLUE, Color.PURPLE,Color.BROWN,Color.PINK],
+            [Color.PINK, Color.BROWN, Color.PURPLE, Color.LIGHT_BLUE,Color.BROWN,Color.GREEN],
+            [Color.LIGHT_BLUE,Color.YELLOW,Color.BLUE,Color.BLUE,Color.ORANGE,Color.YELLOW],
+            [Color.RED,Color.YELLOW,Color.GREEN,Color.PURPLE,Color.PINK,Color.RED]
             ])
     
 

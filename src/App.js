@@ -12,7 +12,10 @@ function App() {
   const[showCongrats,setShowCongrats]=useState(false);
   // const[drawingCanvasRef]=useRef(null);
   const drawingCanvasRef = useRef(null);
+  const [currentConfigSize, setCurrentConfigSize] = useState(4); // Default to 4x4
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [clickedCircle, setClickedCircle] = useState(null);
+
   
   useEffect(() => {
   
@@ -23,8 +26,11 @@ function App() {
     const squareSize = canvas.width / model.board.size;
     for (let i = 0; i < model.board.size; i++) {
       for (let j = 0; j < model.board.size; j++) {
-          ctx.fillStyle = model.board.squares[i][j].color;
-          ctx.fillRect(j * squareSize, i * squareSize, squareSize, squareSize); // Flipped i and j here
+        ctx.fillStyle = model.board.squares[i][j].color ? model.board.squares[i][j].color : "white";
+          ctx.fillRect(j * squareSize, i * squareSize, squareSize, squareSize);
+          ctx.strokeStyle = "#000"; // Black border
+          ctx.lineWidth = 2; // Set border thickness
+          ctx.strokeRect(j * squareSize, i * squareSize, squareSize, squareSize);
       }
   }
   
@@ -34,10 +40,12 @@ function App() {
             const y = i * cellSize;
 
             ctx.beginPath();
-            ctx.arc(x, y, cellSize / 4, 0, 2 * Math.PI); // Drawing a circle
-            ctx.fillStyle = "#FFF"; // White Circle
+            ctx.arc(x, y, cellSize / 6, 0, 2 * Math.PI); // Drawing a circle
+            ctx.fillStyle = clickedCircle && model.board.selectedGroup && clickedCircle.i === i && clickedCircle.j === j ? "#FF0000" : "#FFF";
+            // ctx.fillStyle = "#FFF"; // White Circle
             ctx.fill();
             ctx.strokeStyle = "#000"; // Black border
+            ctx.lineWidth = 2;
             ctx.stroke();
         }
     }
@@ -45,7 +53,7 @@ function App() {
       const [startRow, startCol] = model.board.selectedGroup;
       const startX = startCol * cellSize;
       const startY = startRow * cellSize;
-  
+      
       ctx.strokeStyle = "#FF0000"; // Red border for highlight
       ctx.lineWidth = 4;
       ctx.strokeRect(startX, startY, 2 * cellSize, 2 * cellSize);
@@ -72,10 +80,24 @@ const handleCanvasClick = (event) => {
           const centerY = i * cellSize;
 
           if (isInsideCircle(x, y, centerX, centerY, cellSize / 4)) {
-              model.board.selectGroup(i-1, j-1);
+            if (model.board.selectedGroup && model.board.selectedGroup[0] === i - 1 && model.board.selectedGroup[1] === j - 1) {
+              // Deselect the group
+              model.board.selectedGroup = null;
+              setClickedCircle(null);
+          }
+          else{
+              //model.board.selectGroup(i-1, j-1);
+              const wasGroupSelected = model.board.selectGroup(i - 1, j - 1);
+              setClickedCircle({i, j});
+            if (!wasGroupSelected) {
+              console.log("Group cannot be selected as all squares are white.");
+              return; // Don't re-render the component
+            }
+          }
               setModel({ ...model }); // This will re-render the component.
               return;
-          }
+          
+        }
       }
   }
 };
@@ -84,8 +106,12 @@ const handleCanvasClick = (event) => {
 
   const handleReset = () => {
     //console.log("model",model);
-    model.board.reset();
-    setMoveCount(model.board.moveCount);
+    const config = configurations.find(conf => conf.size === currentConfigSize);
+    const newModel = new Model(config);
+    setShowCongrats(false);
+    setModel(newModel);
+    // setMoveCount(model.board.moveCount);
+    setMoveCount(0);
   };
   const handleRotate = (direction) => {
     // Assuming the model has a rotate method
@@ -98,6 +124,7 @@ const handleCanvasClick = (event) => {
     model.board.rotate(direction);
     setMoveCount(model.board.moveCount);
     setModel({ ...model });
+    
     if (model.board.isSolved()) {
       setShowCongrats(true);
     }
@@ -111,6 +138,7 @@ const handleCanvasClick = (event) => {
     setModel(newModel);
     setMoveCount(0);
     setShowCongrats(false);
+    setCurrentConfigSize(size);
   };
   return (
     <div className="App">
