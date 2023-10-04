@@ -311,6 +311,9 @@ describe('handleCanvasClickController tests', () => {
     expect(setClickedCircleMock).toBeCalled();
     expect(setModelMock).toBeCalled();
   });
+
+
+
   it('should call setShowCongrats when board is solved', () => {
     modelMock.board.selectGroup.mockReturnValue(true);
     modelMock.board.isSolved.mockReturnValue(true);
@@ -367,6 +370,8 @@ test('model initialization', () => {
   expect(model.victory).toBe(false);
 
 });
+
+
 describe('Board selectGroup method', () => {
   let board;
   beforeEach(() => {
